@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12327f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Vetri Murugan Finance</title>
+<style>
+:root{--bg:#f3f6f9;--card:#fff;--ink:#14262e;--mute:#5d707a;--line:#e4eaf0;--brand:#12327f;--bi:#fff;--gold:#e8a900;--red:#c2352b;--green:#1f8a54;--soft:#e9eefb;--sh:0 1px 2px rgba(20,38,46,.06),0 6px 18px rgba(20,38,46,.06);color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1226;--card:#151d38;--ink:#e8f0f2;--mute:#8fa5ad;--line:#27325a;--brand:#8fb0ff;--bi:#0b1a3d;--gold:#f0b92a;--red:#ef6a5e;--green:#4cc88a;--soft:#1b2a55;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding:env(safe-area-inset-top,0px) 0 calc(88px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:640px;margin:0 auto;padding:0 14px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0 10px;gap:8px}
+h1{font-size:20px;font-weight:800;margin:0;line-height:1.2}
+h2{font-size:17px;font-weight:700;margin:22px 0 10px}
+.mute{color:var(--mute);font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card,.stat,.bar{background:var(--card);box-shadow:var(--sh);border-radius:18px}
+.card{padding:16px;margin:10px 0}
+.bar{padding:10px 14px;font-size:14px;margin:6px 0;border:1px solid var(--gold)}
+.hero{background:var(--brand);color:var(--bi);border-radius:22px;padding:20px;margin:6px 0 12px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--sh)}
+.hero b{font-size:36px;font-weight:800;line-height:1.1}.hero span{opacity:.85;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:14px}.stat b{display:block;font-size:24px;font-weight:800}.stat.red b{color:var(--red)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;background:var(--soft);color:var(--brand)}
+.pill.Overdue{background:var(--red);color:#fff}.pill.Closed{background:var(--line);color:var(--mute)}.pill.Active{background:var(--green);color:#fff}.pill.sync{background:var(--gold);color:#241a00}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}.prog i{display:block;height:100%;background:var(--brand)}
+label{display:block;font-weight:700;font-size:14px;margin:16px 0 6px;color:var(--mute)}
+select,input{width:100%;height:54px;font:inherit;font-size:16px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+input.big{height:72px;font-size:32px;font-weight:800;text-align:center}
+.btn{width:100%;height:54px;margin-top:20px;border:0;background:var(--brand);color:var(--bi);font:inherit;font-weight:800;font-size:17px;border-radius:16px;cursor:pointer}
+.btn.sm{width:auto;height:auto;margin:0;padding:8px 14px;font-size:14px;border-radius:10px;background:var(--soft);color:var(--brand)}
+.btn.alt{background:var(--soft);color:var(--brand)}
+.chips,.modes{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.chips button,.modes button{flex:1;min-width:60px;height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--soft);color:var(--brand);font:inherit;font-weight:800;cursor:pointer}
+.modes button{background:var(--card);color:var(--ink)}.modes button.on{background:var(--brand);color:var(--bi);border-color:var(--brand)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal .h{text-align:center;font-size:12px;color:var(--mute)}
+.cal button{aspect-ratio:1;border:0;border-radius:12px;background:var(--card);color:var(--ink);font:inherit;box-shadow:var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.cal button.has{background:var(--soft);font-weight:700}.cal button.today{box-shadow:inset 0 0 0 2px var(--brand)}.cal button.sel{background:var(--brand);color:var(--bi)}
+.cal button small{font-size:10px;font-weight:700}.cal button:disabled{visibility:hidden}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}th{color:var(--mute)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);box-shadow:0 -4px 16px rgba(20,38,46,.08);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;max-width:120px;border:0;background:none;color:var(--mute);font:inherit;font-weight:700;font-size:10px;padding:8px 0 10px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav button.on{color:var(--brand)}nav .ic{font-size:21px;line-height:1;filter:grayscale(1);opacity:.6}nav button.on .ic{filter:none;opacity:1}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;z-index:5;max-width:90%}
+.back{border:0;background:none;color:var(--brand);font:inherit;font-weight:700;padding:8px 0;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.sr{position:absolute;left:-9999px}
+.banner{display:block;width:100%;height:auto;border-radius:18px;margin:12px 0 4px;box-shadow:var(--sh)}
+a{color:var(--brand);font-weight:700}
+textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);resize:vertical}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:3px;margin:12px 0}
+.seg button{flex:1;border:0;background:none;color:var(--mute);font:inherit;font-weight:700;padding:9px;border-radius:10px;cursor:pointer}
+.seg button.on{background:var(--brand);color:var(--bi)}
+.proofs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.proof{background:var(--card);border-radius:14px;box-shadow:var(--sh);overflow:hidden}
+.proof img{width:100%;height:120px;object-fit:cover;display:block;cursor:pointer}
+.proof span{display:block;padding:8px 10px;font-size:13px;font-weight:700}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.ov img{max-width:100%;max-height:75vh;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script type="module">
+import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,createUserWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,getDoc,setDoc,updateDoc,onSnapshot,query,where,writeBatch,getDocs,deleteDoc} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyBNIR2oFEJrcvqcGCBibX6vWCKqIrjMxX0",authDomain:"collection-app-f5e97.firebaseapp.com",projectId:"collection-app-f5e97",storageBucket:"collection-app-f5e97.firebasestorage.app",messagingSenderId:"820066396874",appId:"1:820066396874:web:c09be2d040eaaa4455a233"};
+const app=initializeApp(cfg),auth=getAuth(app);
+const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+
+const $=id=>document.getElementById(id);
+const inr=n=>'\u20b9'+Math.round(n).toLocaleString('en-IN');
+const iso=d=>{const m=d.getMonth()+1,x=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(x<10?'0':'')+x};
+const TODAY=iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/864e5);
+const MODES=['Cash','UPI','Bank'];
+const PTYPES=['Aadhaar','PAN','Address proof','Photo','Other'];
+const BAN='<h1 class="sr">Vetri Murugan Finance</h1><img class="banner" src="banner.jpg" alt="Vetri Murugan Finance. Your growth, our commitment.">';
+const IC={dash:'\ud83d\udcc5',cust:'\ud83d\udc65',loans:'\ud83d\udcd2',add:'\u2795',reports:'\ud83d\udcca',team:'\ud83e\uddd1\u200d\ud83d\udcbc',deleted:'\ud83d\uddd1\ufe0f'};
+let ME=null,ERR='',READY=false,dirty=false,U=[],PU=null;
+let DEL={customers:[],loans:[],payments:[]},DP=[];
+let D={users:[],customers:[],loans:[],payments:[],proofs:[]};
+let UI={tab:'dash',month:TODAY.slice(0,7),sel:TODAY,cust:null,sub:'loan',edit:false,view:null,filter:'All',pick:'',mode:'Cash',toast:''};
+
+const own=()=>ME&&ME.role==='owner';
+const cust=id=>D.customers.find(c=>c.id===id)||DEL.customers.find(c=>c.id===id)||{name:'?',phone:''};
+const nm=id=>(D.users.find(u=>u.id===id)||{}).name||(ME&&id===ME.uid?ME.name:'Staff');
+const lp=l=>D.payments.filter(p=>p.lid===l.id);
+const paid=l=>lp(l).reduce((s,p)=>s+p.amount,0);
+const due=l=>addDays(l.disbursal,100);
+const status=l=>l.amount-paid(l)<=0?'Closed':TODAY>due(l)?'Overdue':'Active';
+const lastPay=l=>lp(l).reduce((m,p)=>p.date>m?p.date:m,l.disbursal);
+const openLoan=cid=>D.loans.find(l=>l.cid===cid&&status(l)!=='Closed');
+const emps=()=>D.users.filter(u=>u.role==='employee');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sum=a=>a.reduce((s,p)=>s+p.amount,0);
+
+function flash(m){UI.toast=m;render();setTimeout(()=>{UI.toast='';render()},2600)}
+function R(){const a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='SELECT')&&$('app').contains(a)){dirty=true;return}render()}
+$('app').addEventListener('focusout',()=>{if(dirty){dirty=false;setTimeout(render,400)}});
+window.addEventListener('online',render);window.addEventListener('offline',render);
+
+/* ---------- auth + data ---------- */
+onAuthStateChanged(auth,async u=>{
+  U.forEach(f=>f());U=[];ME=null;if(PU){PU();PU=null}DEL={customers:[],loans:[],payments:[]};DP=[];D={users:[],customers:[],loans:[],payments:[],proofs:[]};
+  if(u){
+    try{
+      let s=await getDoc(doc(db,'users',u.uid));
+      if(!s.exists()){
+        const b=writeBatch(db);
+        b.set(doc(db,'users',u.uid),{name:'Owner',phone:(u.email||'').split('@')[0],role:'owner',active:true});
+        b.set(doc(db,'meta','setup'),{owner:u.uid});
+        await b.commit();s=await getDoc(doc(db,'users',u.uid));
+      }
+      const d=s.data();
+      if(d.active===false){ERR='This account is disabled. Ask the owner.';await signOut(auth)}
+      else{ME={uid:u.uid,...d};if(ME.role!=='owner'&&['reports','team','deleted'].includes(UI.tab))UI.tab='dash';sub()}
+    }catch(e){ERR='Your account is not set up yet. Ask the owner.';await signOut(auth)}
+  }
+  READY=true;render();
+});
+function sub(){
+  const o=own(),w=(n,f)=>o?collection(db,n):query(collection(db,n),where(f,'==',ME.uid));
+  const L=(n,f)=>U.push(onSnapshot(w(n,f==='lemp'?'lemp':'emp'),{includeMetadataChanges:true},s=>{const a=s.docs.map(d=>({id:d.id,...d.data(),_p:d.metadata.hasPendingWrites}));D[n]=a.filter(x=>!x.deleted);if(o)DEL[n]=a.filter(x=>x.deleted);R()},e=>console.error(e)));
+  L('customers','emp');L('loans','emp');L('payments','lemp');
+  if(o)U.push(onSnapshot(collection(db,'users'),s=>{D.users=s.docs.map(d=>({id:d.id,...d.data()}));R()}));
+  if(o)U.push(onSnapshot(query(collection(db,'proofs'),where('deleted','==',true)),s=>{DP=s.docs.map(d=>({id:d.id,...d.data()}));R()},e=>console.error(e)));
+  U.push(onSnapshot(doc(db,'users',ME.uid),s=>{const d=s.data();if(!d)return;if(d.active===false){ERR='This account has been disabled.';signOut(auth);return}ME={uid:ME.uid,...d};R()}));
+}
+
+/* ---------- actions ---------- */
+const H=window.H={
+  async login(){const p=$('ph').value.trim(),n=$('pin').value.trim();ERR='';
+    try{await signInWithEmailAndPassword(auth,p+'@collections.app',n)}catch(e){ERR='Phone number or PIN is wrong.';render()}},
+  out(){signOut(auth)},
+  tab(t){UI.tab=t;UI.cust=null;subProofs(null);render()},
+  set(k,v){UI[k]=v;render()},
+  c(id){UI.cust=id;UI.sub='loan';UI.edit=false;subProofs(id);render()},
+  month(n){const p=UI.month.split('-'),d=new Date(+p[0],+p[1]-1+n,1);UI.month=iso(d).slice(0,7);render()},
+  amt(n){$('amt').value=n},
+  pay(){
+    const l=D.loans.find(x=>x.id===UI.pick),a=parseFloat($('amt').value);
+    if(!l)return flash('Select a customer first');
+    if(!(a>0))return flash('Enter an amount above 0');
+    const bal=l.amount-paid(l);
+    if(a>bal)return flash('Amount is more than the balance ('+inr(bal)+')');
+    const n=new Date(),t=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);
+    const r=doc(collection(db,'payments'));
+    setDoc(r,{lid:l.id,cid:l.cid,lemp:l.emp,emp:ME.uid,date:TODAY,time:t,amount:a,mode:UI.mode,ts:Date.now()}).catch(()=>flash('Could not save this payment'));
+    UI.pick='';flash(a>=bal?'Saved. Loan closed':(navigator.onLine?'Payment saved':'Saved offline. Will sync later'));
+  },
+  newLoan(){
+    const sel=$('nlc').value,name=$('nln').value.trim(),ph=$('nlp').value.trim(),a=parseFloat($('nla').value),g=parseFloat($('nlg').value),dt=$('nld').value||TODAY;
+    let emp=$('nle').value;
+    if(sel){if(openLoan(sel))return flash('This customer already has an open loan');emp=cust(sel).emp}
+    else if(!name)return flash('Enter the customer name');
+    if(!(a>0)||!(g>0))return flash('Enter loan amount and amount in hand');
+    if(g>a)return flash('Amount in hand cannot be more than the loan amount');
+    const b=writeBatch(db);let cid=sel;
+    if(!cid){cid=doc(collection(db,'customers')).id;b.set(doc(db,'customers',cid),{name,phone:ph,address:$('nlad').value.trim(),emp,by:ME.uid,ts:Date.now()})}
+    b.set(doc(collection(db,'loans')),{cid,emp,disbursal:dt,amount:a,given:g,created:Date.now(),by:ME.uid});
+    b.commit().catch(()=>flash('Could not save the loan'));
+    UI.cust=null;flash('Loan saved. Due date: '+addDays(dt,100));
+  },
+  async addEmp(){
+    const n=$('en').value.trim(),p=$('ep').value.trim(),pin=$('epin').value.trim();
+    if(!n)return flash('Enter the employee name');
+    if(!/^\d{10}$/.test(p))return flash('Phone number must be 10 digits');
+    if(!/^\d{6}$/.test(pin))return flash('PIN must be 6 digits');
+    try{
+      const s=getApps().find(a=>a.name==='sec')||initializeApp(cfg,'sec'),a2=getAuth(s);
+      const c=await createUserWithEmailAndPassword(a2,p+'@collections.app',pin);
+      await setDoc(doc(db,'users',c.user.uid),{name:n,phone:p,role:'employee',active:true});
+      await signOut(a2);flash(n+' added. Share the phone number and PIN with them');
+    }catch(e){flash(e.code==='auth/email-already-in-use'?'This phone number is already used':'Could not add. Check your internet')}
+  },
+  toggle(id,on){updateDoc(doc(db,'users',id),{active:!on}).catch(()=>flash('Could not update'))},
+  async assign(cid,eid){
+    const b=writeBatch(db);b.update(doc(db,'customers',cid),{emp:eid});
+    D.loans.filter(l=>l.cid===cid).forEach(l=>b.update(doc(db,'loans',l.id),{emp:eid}));
+    D.payments.filter(p=>p.cid===cid).forEach(p=>b.update(doc(db,'payments',p.id),{lemp:eid}));
+    try{(await getDocs(query(collection(db,'proofs'),where('cid','==',cid)))).forEach(d=>{if(!d.data().deleted)b.update(d.ref,{emp:eid})})}catch(e){}
+    try{await b.commit();flash('Customer reassigned')}catch(e){flash('Could not reassign')}
+  },
+  saveCust(){
+    const n=$('cdn').value.trim();if(!n)return flash('Name cannot be empty');
+    updateDoc(doc(db,'customers',UI.cust),{name:n,phone:$('cdp').value.trim(),phone2:$('cdq').value.trim(),address:$('cda').value.trim()}).catch(()=>flash('Could not save'));
+    UI.edit=false;flash('Details saved');
+  },
+  async upload(){
+    const f=$('pf').files[0];if(!f)return;
+    try{
+      const data=await shrink(f);
+      if(data.length>900000)return flash('Image is too large. Try a smaller photo');
+      setDoc(doc(collection(db,'proofs')),{cid:UI.cust,emp:cust(UI.cust).emp,type:$('pt').value,data,by:ME.uid,ts:Date.now()}).catch(()=>flash('Could not save the document'));
+      flash(navigator.onLine?'Document saved':'Saved offline. Will sync later');
+    }catch(e){flash('Could not read this image')}
+  },
+  delProof(id){
+    if(!own())return;const p=D.proofs.find(x=>x.id===id);if(!p)return;
+    const reason=prompt('Delete this document?\nIt moves to the Deleted tab and can be restored.\n\nType a reason (optional), then tap OK:');
+    if(reason===null)return;
+    updateDoc(doc(db,'proofs',id),{deleted:true,deletedAt:Date.now(),deletedBy:ME.uid,deletedByName:ME.name,reason:reason.trim(),prevEmp:p.emp,emp:'_deleted'}).then(()=>{UI.view=null;flash('Document moved to Deleted')}).catch(()=>flash('Could not delete'));
+  },
+  delPay(id){
+    if(!own())return;const p=D.payments.find(x=>x.id===id);if(!p)return;
+    const reason=prompt('Delete this payment of '+inr(p.amount)+' ('+p.date+')?\nIt moves to the Deleted tab and can be restored.\n\nType a reason (optional), then tap OK:');
+    if(reason===null)return;
+    updateDoc(doc(db,'payments',id),{deleted:true,deletedAt:Date.now(),deletedBy:ME.uid,deletedByName:ME.name,reason:reason.trim(),prevLemp:p.lemp,lemp:'_deleted'}).then(()=>flash('Payment moved to Deleted')).catch(()=>flash('Could not delete'));
+  },
+  async delCust(){
+    if(!own())return;
+    const id=UI.cust,c=cust(id);
+    const reason=prompt('Delete '+c.name+' with all loans, payments and documents?\nThey move to the Deleted tab and can be restored.\n\nType a reason (optional), then tap OK:');
+    if(reason===null)return;
+    const info=x=>({deleted:true,deletedAt:Date.now(),deletedBy:ME.uid,deletedByName:ME.name,reason:reason.trim(),...x});
+    const ops=[[doc(db,'customers',id),info({prevEmp:c.emp,emp:'_deleted'})]];
+    D.loans.filter(l=>l.cid===id).forEach(l=>ops.push([doc(db,'loans',l.id),info({via:'customer',prevEmp:l.emp,emp:'_deleted'})]));
+    D.payments.filter(p=>p.cid===id).forEach(p=>ops.push([doc(db,'payments',p.id),info({via:'customer',prevLemp:p.lemp,lemp:'_deleted'})]));
+    try{
+      (await getDocs(query(collection(db,'proofs'),where('cid','==',id)))).forEach(d=>{const x=d.data();if(!x.deleted)ops.push([d.ref,info({via:'customer',prevEmp:x.emp,emp:'_deleted'})])});
+      await commitAll(ops);UI.cust=null;subProofs(null);flash(c.name+' moved to Deleted');
+    }catch(e){flash('Could not delete. Check your internet')}
+  },
+  async restoreCust(id){
+    const c=DEL.customers.find(x=>x.id===id);if(!c)return;
+    const t=Date.now(),ops=[[doc(db,'customers',id),{deleted:false,emp:c.prevEmp,restoredAt:t}]];
+    DEL.loans.filter(l=>l.cid===id&&l.via==='customer').forEach(l=>ops.push([doc(db,'loans',l.id),{deleted:false,emp:l.prevEmp,restoredAt:t}]));
+    DEL.payments.filter(p=>p.cid===id&&p.via==='customer').forEach(p=>ops.push([doc(db,'payments',p.id),{deleted:false,lemp:p.prevLemp,restoredAt:t}]));
+    try{
+      (await getDocs(query(collection(db,'proofs'),where('cid','==',id)))).forEach(d=>{const x=d.data();if(x.deleted&&x.via==='customer')ops.push([d.ref,{deleted:false,emp:x.prevEmp,restoredAt:t}])});
+      await commitAll(ops);flash(c.name+' restored');
+    }catch(e){flash('Could not restore')}
+  },
+  restorePay(id){
+    const p=DEL.payments.find(x=>x.id===id);if(!p)return;
+    if(DEL.customers.some(c=>c.id===p.cid))return flash('Restore the customer first');
+    updateDoc(doc(db,'payments',id),{deleted:false,lemp:p.prevLemp,restoredAt:Date.now()}).then(()=>flash('Payment restored')).catch(()=>flash('Could not restore'));
+  },
+  restoreProof(id){
+    const p=DP.find(x=>x.id===id);if(!p)return;
+    if(DEL.customers.some(c=>c.id===p.cid))return flash('Restore the customer first');
+    updateDoc(doc(db,'proofs',id),{deleted:false,emp:p.prevEmp,restoredAt:Date.now()}).then(()=>flash('Document restored')).catch(()=>flash('Could not restore'));
+  },
+  perm(id,on){updateDoc(doc(db,'users',id),{canAdd:!on}).then(()=>flash(on?'Add-customer access removed':'Add-customer access given')).catch(()=>flash('Could not update'))},
+  csv(){
+    const rows=[['Date','Time','Customer','Amount','Mode','Collected by']].concat(D.payments.slice().sort((a,b)=>a.date<b.date?-1:1).map(p=>[p.date,p.time,cust(p.cid).name,p.amount,p.mode,nm(p.emp)]));
+    const t=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='payments-'+TODAY+'.csv';a.click();
+  }
+};
+
+/* ---------- views ---------- */
+async function commitAll(ops){for(let i=0;i<ops.length;i+=400){const b=writeBatch(db);ops.slice(i,i+400).forEach(o=>b.update(o[0],o[1]));await b.commit()}}
+function deletedTab(){
+  const dt=x=>new Date(x.deletedAt).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const meta=x=>`<div class="mute" style="margin-top:6px">Deleted by ${esc(x.deletedByName||'Owner')} on ${dt(x)}${x.reason?'<br>Reason: '+esc(x.reason):''}</div>`;
+  const rb=(fn,id,t)=>`<button class="btn sm" style="margin-top:10px" onclick="H.${fn}('${id}')">${t}</button>`;
+  const cs=DEL.customers.slice().sort((a,b)=>b.deletedAt-a.deletedAt).map(c=>{
+    const ls=DEL.loans.filter(l=>l.cid===c.id),ps=DEL.payments.filter(p=>p.cid===c.id&&p.via==='customer');
+    return `<div class="card"><div class="row"><b>${esc(c.name)}</b><span class="pill Closed">Customer</span></div><div class="mute">${ls.length} loan(s) \u00b7 ${ps.length} payment(s), ${inr(sum(ps))} collected</div>${meta(c)}${rb('restoreCust',c.id,'Restore customer')}</div>`}).join('');
+  const pays=DEL.payments.filter(p=>!p.via).sort((a,b)=>b.deletedAt-a.deletedAt).map(p=>`<div class="card"><div class="row"><b>${inr(p.amount)} \u00b7 ${esc(cust(p.cid).name)}</b><span class="pill Closed">Payment</span></div><div class="mute">${p.date} ${p.time} \u00b7 ${p.mode} \u00b7 by ${esc(nm(p.emp))}</div>${meta(p)}${rb('restorePay',p.id,'Restore payment')}</div>`).join('');
+  const prs=DP.filter(p=>!p.via).sort((a,b)=>b.deletedAt-a.deletedAt).map(p=>`<div class="card"><div class="row"><b>${esc(p.type)} \u00b7 ${esc(cust(p.cid).name)}</b><span class="pill Closed">Document</span></div><img src="${p.data}" alt="${esc(p.type)}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px">${meta(p)}${rb('restoreProof',p.id,'Restore document')}</div>`).join('');
+  return '<h2 style="margin-top:0">Deleted entries</h2><div class="mute">Deleted items are kept here with who deleted them and when. Employees cannot delete anything.</div>'+((cs+pays+prs)||'<div class="card mute" style="margin-top:12px">Nothing has been deleted.</div>');
+}
+function subProofs(id){
+  if(PU){PU();PU=null}D.proofs=[];
+  if(!id||id==='new'||!ME)return;
+  const q=own()?query(collection(db,'proofs'),where('cid','==',id)):query(collection(db,'proofs'),where('cid','==',id),where('emp','==',ME.uid));
+  PU=onSnapshot(q,{includeMetadataChanges:true},s=>{D.proofs=s.docs.map(d=>({id:d.id,...d.data(),_p:d.metadata.hasPendingWrites})).filter(x=>!x.deleted);R()},e=>console.error(e));
+}
+function shrink(file){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{const s=Math.min(1,1000/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',0.7))};
+  img.onerror=rej;img.src=u})}
+function SEG(){return `<div class="seg"><button class="${UI.sub!=='details'?'on':''}" onclick="H.set('sub','loan')">Loan</button><button class="${UI.sub==='details'?'on':''}" onclick="H.set('sub','details')">Details</button></div>`}
+function detailsView(c){
+  let o='';
+  if(UI.edit&&own()){
+    o+=`<div class="card"><label for="cdn" style="margin-top:0">Name</label><input id="cdn" value="${esc(c.name)}"><label for="cdp">Phone</label><input id="cdp" type="tel" inputmode="numeric" value="${esc(c.phone)}"><label for="cdq">Alternate phone</label><input id="cdq" type="tel" inputmode="numeric" value="${esc(c.phone2||'')}"><label for="cda">Address</label><textarea id="cda" rows="3">${esc(c.address||'')}</textarea><button class="btn" onclick="H.saveCust()">Save details</button><button class="btn alt" style="margin-top:10px" onclick="H.set('edit',false)">Cancel</button></div>`;
+  }else{
+    o+=`<div class="card"><div class="row"><b>Contact and address</b>${own()?`<button class="btn sm" onclick="H.set('edit',true)">Edit</button>`:''}</div><div style="margin-top:10px">${c.phone?`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`:'<span class="mute">No phone added</span>'}${c.phone2?` &middot; <a href="tel:${esc(c.phone2)}">${esc(c.phone2)}</a>`:''}</div><div class="mute" style="margin-top:10px">Address</div><div>${c.address?esc(c.address).replace(/\n/g,'<br>'):'<span class="mute">Not added</span>'}</div></div>`;
+  }
+  const ps=D.proofs.filter(p=>p.cid===c.id);
+  o+='<h2>Proof documents</h2>'+(ps.length?`<div class="proofs">${ps.map(p=>`<div class="proof"><img src="${p.data}" alt="${esc(p.type)}" onclick="H.set('view','${p.id}')"><span>${esc(p.type)}${p._p?' (pending)':''}</span></div>`).join('')}</div>`:'<div class="card mute">No documents uploaded yet.</div>');
+  o+=`<div class="card"><b>Upload a document</b><label for="pt">Type</label><select id="pt">${PTYPES.map(t=>`<option>${t}</option>`).join('')}</select><label for="pf">Take a photo or choose one (uploads straight away)</label><input id="pf" type="file" accept="image/*" style="height:auto;padding:12px" onchange="H.upload()"></div>`;
+  if(own())o+=`<button class="btn alt" style="color:var(--red);margin-top:20px" onclick="H.delCust()">Delete this customer</button>`;
+  return o;
+}
+function viewer(){
+  const p=UI.view&&D.proofs.find(x=>x.id===UI.view);if(!p)return '';
+  return `<div class="ov" onclick="H.set('view',null)"><img src="${p.data}" alt="${esc(p.type)}"><div style="color:#fff;font-weight:700">${esc(p.type)}</div>${own()?`<button class="btn alt" style="width:auto;padding:0 28px;margin-top:0" onclick="event.stopPropagation();H.delProof('${p.id}')">Delete</button>`:''}<button class="btn" style="width:auto;padding:0 36px;margin-top:0">Close</button></div>`;
+}
+function loginView(){return `${BAN}<div class="card"><h2 style="margin-top:0">Log in</h2>${ERR?`<div class="bar" role="alert">${esc(ERR)}</div>`:''}<label for="ph" style="margin-top:0">Phone number</label><input id="ph" type="tel" inputmode="numeric" autocomplete="username"><label for="pin">PIN (6 digits)</label><input id="pin" type="password" inputmode="numeric" autocomplete="current-password" onkeydown="if(event.key==='Enter')H.login()"><button class="btn" onclick="H.login()">Log in</button></div>`}
+
+function head(){
+  const pc=D.payments.filter(p=>p._p).length;
+  return `${BAN}<header><div><b>${esc(ME.name)}</b> <span class="mute">\u00b7 ${own()?'Owner':'Employee'}</span></div><button class="btn sm" onclick="H.out()">Log out</button></header>`
+   +(!navigator.onLine?`<div class="bar">You are offline. Payments are saved on this phone and sync later.</div>`:'')
+   +(pc?`<div class="bar">${pc} payment${pc>1?'s':''} pending sync</div>`:'');
+}
+
+function dash(){
+  const od=D.loans.filter(l=>status(l)==='Overdue'),soon=D.loans.filter(l=>{const d=diff(due(l),TODAY);return status(l)==='Active'&&d>=0&&d<=7});
+  const tp=D.payments.filter(p=>p.date===TODAY);
+  const [y,m]=UI.month.split('-').map(Number),first=new Date(y,m-1,1).getDay(),dim=new Date(y,m,0).getDate();
+  const by={};D.payments.forEach(p=>(by[p.date]=by[p.date]||[]).push(p));
+  let cells=['S','M','T','W','T','F','S'].map(d=>`<div class="h">${d}</div>`).join('')+'<button disabled></button>'.repeat(first);
+  for(let d=1;d<=dim;d++){const ds=UI.month+'-'+(d<10?'0':'')+d,e=by[ds];
+    cells+=`<button class="${e?'has ':''}${ds===TODAY?'today ':''}${ds===UI.sel?'sel':''}" onclick="H.set('sel','${ds}')">${d}${e?`<small>${e.length}</small>`:''}</button>`}
+  const day=(by[UI.sel]||[]).slice().sort((a,b)=>a.time<b.time?-1:1);
+  const list=day.map(p=>`<div class="card row"><div><b>${esc(cust(p.cid).name)}</b><div class="mute">${p.time} \u00b7 ${p.mode} \u00b7 ${esc(nm(p.emp))}${p._p?' <span class="pill sync">Pending sync</span>':''}</div></div><b>${inr(p.amount)}</b></div>`).join('');
+  const mn=new Date(y,m-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
+  return `<div class="hero"><span>Collected today</span><b>${inr(sum(tp))}</b><span>${tp.length} ${tp.length===1?'entry':'entries'}</span></div>
+  <div class="stats"><div class="stat red"><b>${od.length}</b><span class="mute">Overdue loans</span></div><div class="stat"><b>${soon.length}</b><span class="mute">Due in 7 days</span></div></div>
+  <h2 class="row"><button class="back" onclick="H.month(-1)">\u2039 Prev</button><span>${mn}</span><button class="back" onclick="H.month(1)">Next \u203a</button></h2>
+  <div class="cal">${cells}</div>
+  <h2>${new Date(UI.sel+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}: ${day.length} ${day.length===1?'entry':'entries'}, ${inr(sum(day))}</h2>
+  ${list||'<div class="card mute">No collections on this date.</div>'}`;
+}
+
+function newLoanView(){
+  const eo=(own()?[{id:ME.uid,name:'Me (Owner)'}].concat(emps().filter(u=>u.active!==false)):[{id:ME.uid,name:ME.name}]).map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  const co=D.customers.filter(c=>!openLoan(c.id)).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  return `<button class="back" onclick="H.c(null)">\u2039 Back</button><h2 style="margin-top:0">New customer / loan</h2>
+  <label for="nlc" style="margin-top:0">Existing customer (for a repeat loan)</label><select id="nlc"><option value="">New customer</option>${co}</select>
+  <label for="nln">Name (new customer)</label><input id="nln"><label for="nlp">Phone (new customer)</label><input id="nlp" type="tel" inputmode="numeric"><label for="nlad">Address (new customer)</label><textarea id="nlad" rows="2"></textarea>
+  <label for="nle">Collector (new customer)</label><select id="nle">${eo}</select>
+  <label for="nla">Loan amount to repay (\u20b9)</label><input id="nla" type="number" inputmode="numeric">
+  <label for="nlg">Amount given in hand (\u20b9)</label><input id="nlg" type="number" inputmode="numeric">
+  <label for="nld">Disbursal date</label><input id="nld" type="date" value="${TODAY}">
+  <div class="mute" style="margin-top:10px">Due date is set automatically: disbursal date + 100 days.</div>
+  <button class="btn" onclick="H.newLoan()">Save loan</button>`;
+}
+
+function custTab(){
+  if(UI.cust==='new'&&(own()||ME.canAdd))return newLoanView();
+  if(UI.cust){
+    const c=D.customers.find(x=>x.id===UI.cust);if(!c){UI.cust=null;return custTab()}
+    const l=openLoan(c.id);
+    let o=`<button class="back" onclick="H.c(null)">\u2039 All customers</button><h2 style="margin-top:0">${esc(c.name)}</h2><div class="mute">${esc(c.phone)} \u00b7 Collector: ${esc(nm(c.emp))}</div>`;
+    o+=SEG();if(UI.sub==='details')return o+detailsView(c);
+    if(!l)return o+'<div class="card mute">No active loan. See the Loans tab for history.</div>';
+    const pd=paid(l),dl=diff(due(l),TODAY);
+    o+=`<div class="card"><div class="row"><b>Current loan</b><span class="pill ${status(l)}">${status(l)}</span></div><div class="stats" style="margin-top:10px"><div><span class="mute">Loan amount</span><br><b>${inr(l.amount)}</b></div><div><span class="mute">Given in hand</span><br><b>${inr(l.given)}</b></div><div><span class="mute">Repaid</span><br><b>${inr(pd)}</b></div><div><span class="mute">Balance</span><br><b>${inr(l.amount-pd)}</b></div></div><div class="prog"><i style="width:${Math.min(100,pd/l.amount*100)}%"></i></div><div class="mute" style="margin-top:8px">Disbursed ${l.disbursal} \u00b7 Due ${due(l)} (${dl>=0?dl+' days left':-dl+' days overdue'})</div></div>`;
+    const rows=lp(l).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.time<b.time?1:-1)).map(p=>`<tr><td>${p.date}</td><td>${p.time}</td><td>${p.mode}</td><td>${esc(nm(p.emp))}</td><td><b>${inr(p.amount)}</b>${p._p?' <span class="pill sync">Pending</span>':''}</td>${own()?`<td><button class="btn sm" style="color:var(--red)" onclick="H.delPay('${p.id}')">Delete</button></td>`:''}</tr>`).join('');
+    return o+`<h2>Payment history</h2><div class="card tbl"><table><tr><th>Date</th><th>Time</th><th>Mode</th><th>By</th><th>Amount</th>${own()?'<th></th>':''}</tr>${rows}</table></div>`;
+  }
+  const items=D.customers.slice().sort((a,b)=>a.name<b.name?-1:1).map(c=>{
+    const l=openLoan(c.id);
+    if(!l)return `<div class="card row" style="cursor:pointer" onclick="H.c('${c.id}')"><b>${esc(c.name)}</b><span class="pill Closed">No active loan</span></div>`;
+    const st=status(l),pd=paid(l),idle=diff(TODAY,lastPay(l));
+    return `<div class="card" style="cursor:pointer" onclick="H.c('${c.id}')"><div class="row"><b>${esc(c.name)}</b><span class="pill ${st}">${st}</span></div><div class="row mute"><span>Balance ${inr(l.amount-pd)} of ${inr(l.amount)}</span><span>${idle>=7?'No payment in '+idle+' days':'Last paid '+lastPay(l)}</span></div><div class="prog"><i style="width:${Math.min(100,pd/l.amount*100)}%;${st==='Overdue'?'background:var(--red)':''}"></i></div></div>`}).join('');
+  return `<div class="row"><h2 style="margin:0">Customers</h2>${(own()||ME.canAdd)?`<button class="btn sm" onclick="H.c('new')">+ New</button>`:''}</div>${items||'<div class="card mute">No customers yet.'+(own()?' Tap + New to add the first one.':'')+'</div>'}`;
+}
+
+function loansTab(){
+  const f=UI.filter,opts=['All','Active','Overdue','Closed'].map(s=>`<option${s===f?' selected':''}>${s}</option>`).join('');
+  const rows=D.loans.filter(l=>f==='All'||status(l)===f).sort((a,b)=>a.disbursal<b.disbursal?1:-1).map(l=>{
+    const st=status(l);let note='';
+    if(st==='Closed'){const cd=lastPay(l);note=diff(cd,l.disbursal)+' days, '+(cd<=due(l)?'on time':'late')}
+    return `<tr><td>${esc(cust(l.cid).name)}</td><td>${l.disbursal}</td><td>${inr(l.amount)}</td><td>${inr(l.given)}</td><td>${inr(l.amount-l.given)}</td><td>${inr(paid(l))}</td><td><span class="pill ${st}">${st}</span></td><td>${note}</td></tr>`}).join('');
+  return `<h2 style="margin-top:0">Loan history</h2><label for="f" style="margin-top:0">Status</label><select id="f" onchange="H.set('filter',this.value)">${opts}</select><div class="card tbl" style="margin-top:10px"><table><tr><th>Customer</th><th>Disbursed</th><th>Loan</th><th>In hand</th><th>Interest</th><th>Repaid</th><th>Status</th><th>Closed</th></tr>${rows}</table></div>`;
+}
+
+function addTab(){
+  const open=D.loans.filter(l=>status(l)!=='Closed').sort((a,b)=>cust(a.cid).name<cust(b.cid).name?-1:1);
+  const opts='<option value="">Select customer</option>'+open.map(l=>`<option value="${l.id}"${UI.pick===l.id?' selected':''}>${esc(cust(l.cid).name)}</option>`).join('');
+  const l=open.find(x=>x.id===UI.pick);
+  return `<h2 style="margin-top:0">Add payment</h2><label for="cs" style="margin-top:0">Customer</label><select id="cs" onchange="H.set('pick',this.value)">${opts}</select>
+  ${l?`<div class="bar" style="border-color:var(--line)"><div class="row"><span>Balance</span><b>${inr(l.amount-paid(l))}</b></div></div>`:''}
+  <label for="amt">Amount collected (\u20b9)</label><input id="amt" class="big" type="number" inputmode="numeric" min="1" placeholder="0">
+  <div class="chips">${[100,200,300,500,1000].map(n=>`<button onclick="H.amt(${n})">${n}</button>`).join('')}</div>
+  <label>Mode of payment</label><div class="modes">${MODES.map(m=>`<button class="${UI.mode===m?'on':''}" onclick="H.set('mode','${m}')">${m}</button>`).join('')}</div>
+  <div class="mute" style="margin-top:12px">Saved with today's date, the current time and your ID.${navigator.onLine?'':' You are offline, so it will sync later.'}</div>
+  <button class="btn" onclick="H.pay()">Save payment</button>`;
+}
+
+function reports(){
+  const ls=D.loans,lent=ls.reduce((s,l)=>s+l.given,0),tc=ls.reduce((s,l)=>s+l.amount,0);
+  const pend=ls.filter(l=>status(l)!=='Closed').reduce((s,l)=>s+l.amount-paid(l),0);
+  const ids=[ME.uid].concat(emps().map(u=>u.id));
+  const er=ids.map(id=>{const a=D.payments.filter(p=>p.emp===id),t=a.filter(p=>p.date===TODAY);return `<tr><td>${esc(nm(id))}</td><td>${t.length}</td><td>${inr(sum(t))}</td><td>${inr(sum(a))}</td></tr>`}).join('');
+  const mr=MODES.map(m=>`<tr><td>${m}</td><td>${inr(sum(D.payments.filter(p=>p.mode===m)))}</td></tr>`).join('');
+  const or=ls.filter(l=>status(l)==='Overdue').map(l=>`<tr><td>${esc(cust(l.cid).name)}</td><td>${inr(l.amount-paid(l))}</td><td>${diff(TODAY,due(l))} days</td></tr>`).join('');
+  return `<h2 style="margin-top:0">Reports</h2><div class="stats"><div class="stat"><b>${inr(lent)}</b><span class="mute">Cash lent out</span></div><div class="stat"><b>${inr(tc)}</b><span class="mute">Total to collect</span></div><div class="stat"><b>${inr(tc-lent)}</b><span class="mute">Interest earned</span></div><div class="stat"><b>${inr(sum(D.payments))}</b><span class="mute">Collected so far</span></div><div class="stat red"><b>${inr(pend)}</b><span class="mute">Pending on open loans</span></div></div>
+  <h2>By collector</h2><div class="card tbl"><table><tr><th>Name</th><th>Today</th><th>Today \u20b9</th><th>All time</th></tr>${er}</table></div>
+  <h2>By mode</h2><div class="card tbl"><table><tr><th>Mode</th><th>Collected</th></tr>${mr}</table></div>
+  <h2>Overdue</h2><div class="card tbl"><table><tr><th>Customer</th><th>Balance</th><th>Overdue by</th></tr>${or||'<tr><td colspan="3" class="mute">None</td></tr>'}</table></div>
+  <button class="btn alt" onclick="H.csv()">Download all payments (CSV)</button>`;
+}
+
+function team(){
+  const E=emps(),list=E.map(u=>{const off=u.active===false,n=D.customers.filter(c=>c.emp===u.id).length;
+    return `<div class="card"><div class="row"><b>${esc(u.name)}</b><span class="pill ${off?'Closed':'Active'}">${off?'Disabled':'Active'}</span></div><div class="mute">${esc(u.phone)} \u00b7 ${n} customers</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="H.toggle('${u.id}',${!off})">${off?'Enable':'Disable'}</button><button class="btn sm" onclick="H.perm('${u.id}',${u.canAdd===true})">Add customers: ${u.canAdd?'ON':'OFF'}</button></div></div>`}).join('');
+  const opt=sel=>[{id:ME.uid,name:'Me (Owner)'}].concat(E.filter(u=>u.active!==false||u.id===sel)).map(u=>`<option value="${u.id}"${u.id===sel?' selected':''}>${esc(u.name)}</option>`).join('');
+  const asg=D.customers.map(c=>`<div class="row" style="margin:8px 0"><span>${esc(c.name)}</span><select style="width:auto;height:44px" aria-label="Collector for ${esc(c.name)}" onchange="H.assign('${c.id}',this.value)">${opt(c.emp)}</select></div>`).join('');
+  return `<h2 style="margin-top:0">Team</h2>${list||'<div class="card mute">No employees yet.</div>'}
+  <h2>Add employee</h2><div class="card"><label for="en" style="margin-top:0">Name</label><input id="en"><label for="ep">Phone number (10 digits)</label><input id="ep" type="tel" inputmode="numeric"><label for="epin">PIN (6 digits)</label><input id="epin" inputmode="numeric" maxlength="6"><button class="btn" onclick="H.addEmp()">Add employee</button></div>
+  <h2>Customer assignment</h2><div class="card">${asg||'<span class="mute">No customers yet.</span>'}</div>`;
+}
+
+function render(){
+  const A=$('app');
+  if(!READY){A.innerHTML='<div class="card mute" style="margin-top:40px">Loading\u2026</div>';return}
+  if(!ME){A.innerHTML=loginView();return}
+  let tabs=[['dash','Dashboard'],['cust','Customers'],['loans','Loans'],['add','Add'],['reports','Reports'],['team','Team'],['deleted','Deleted']];
+  if(!own())tabs=tabs.filter(t=>!['reports','team','deleted'].includes(t[0]));
+  const body={dash,cust:custTab,loans:loansTab,add:addTab,reports,team,deleted:deletedTab}[UI.tab]();
+  A.innerHTML=head()+body+'<nav>'+tabs.map(t=>`<button class="${UI.tab===t[0]?'on':''}" onclick="H.tab('${t[0]}')"><span class="ic">${IC[t[0]]}</span>${t[1]}</button>`).join('')+'</nav>'+(UI.toast?`<div class="toast" role="status">${esc(UI.toast)}</div>`:'')+viewer();
+}
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
