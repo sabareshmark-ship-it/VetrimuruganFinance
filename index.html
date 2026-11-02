@@ -62,6 +62,11 @@ textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border-radius:
 .proof span{display:block;padding:8px 10px;font-size:13px;font-weight:700}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
 .ov img{max-width:100%;max-height:75vh;border-radius:8px}
+.ch .t{fill:var(--mute);font-size:9px}.ch .g{stroke:var(--line);stroke-width:1}.ch .b{fill:var(--brand)}
+.ds1{stroke:var(--green)}.ds2{stroke:var(--red)}.ds3{stroke:var(--mute)}
+.hb{display:grid;grid-template-columns:84px 1fr auto;gap:8px;align-items:center;margin:10px 0;font-size:14px}
+.hb .tr{height:10px;background:var(--line);border-radius:5px;overflow:hidden}.hb .tr i{display:block;height:100%;background:var(--brand)}.hb b{font-size:13px}
+.lg span{display:block;margin:5px 0;font-size:14px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
 </style>
 </head>
 <body>
@@ -88,7 +93,7 @@ const IC={dash:'\ud83d\udcc5',cust:'\ud83d\udc65',loans:'\ud83d\udcd2',add:'\u27
 let ME=null,ERR='',READY=false,dirty=false,U=[],PU=null;
 let DEL={customers:[],loans:[],payments:[]},DP=[];
 let D={users:[],customers:[],loans:[],payments:[],proofs:[]};
-let UI={tab:'dash',month:TODAY.slice(0,7),sel:TODAY,cust:null,sub:'loan',edit:false,view:null,filter:'All',pick:'',mode:'Cash',toast:''};
+let UI={tab:'dash',month:TODAY.slice(0,7),sel:TODAY,cust:null,sub:'loan',edit:false,view:null,rep:'sum',ir:'d',rd:TODAY,rw:TODAY,rc:null,filter:'All',pick:'',mode:'Cash',toast:''};
 
 const own=()=>ME&&ME.role==='owner';
 const cust=id=>D.customers.find(c=>c.id===id)||DEL.customers.find(c=>c.id===id)||{name:'?',phone:''};
@@ -141,7 +146,7 @@ const H=window.H={
   async login(){const p=$('ph').value.trim(),n=$('pin').value.trim();ERR='';
     try{await signInWithEmailAndPassword(auth,p+'@collections.app',n)}catch(e){ERR='Phone number or PIN is wrong.';render()}},
   out(){signOut(auth)},
-  tab(t){UI.tab=t;UI.cust=null;subProofs(null);render()},
+  tab(t){UI.tab=t;UI.cust=null;UI.rc=null;subProofs(null);render()},
   set(k,v){UI[k]=v;render()},
   c(id){UI.cust=id;UI.sub='loan';UI.edit=false;subProofs(id);render()},
   month(n){const p=UI.month.split('-'),d=new Date(+p[0],+p[1]-1+n,1);UI.month=iso(d).slice(0,7);render()},
@@ -155,7 +160,7 @@ const H=window.H={
     const n=new Date(),t=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);
     const r=doc(collection(db,'payments'));
     setDoc(r,{lid:l.id,cid:l.cid,lemp:l.emp,emp:ME.uid,date:TODAY,time:t,amount:a,mode:UI.mode,ts:Date.now()}).catch(()=>flash('Could not save this payment'));
-    UI.pick='';flash(a>=bal?'Saved. Loan closed':(navigator.onLine?'Payment saved':'Saved offline. Will sync later'));
+    UI.pick='';UI.rc={cid:l.cid,amount:a,date:TODAY,time:t,mode:UI.mode,bal:bal-a};flash(a>=bal?'Saved. Loan closed':(navigator.onLine?'Payment saved':'Saved offline. Will sync later'));
   },
   newLoan(){
     const sel=$('nlc').value,name=$('nln').value.trim(),ph=$('nlp').value.trim(),a=parseFloat($('nla').value),g=parseFloat($('nlg').value),dt=$('nld').value||TODAY;
@@ -190,6 +195,9 @@ const H=window.H={
     try{(await getDocs(query(collection(db,'proofs'),where('cid','==',cid)))).forEach(d=>{if(!d.data().deleted)b.update(d.ref,{emp:eid})})}catch(e){}
     try{await b.commit();flash('Customer reassigned')}catch(e){flash('Could not reassign')}
   },
+  ins(){UI.tab='reports';UI.rep='ins';UI.cust=null;UI.rc=null;subProofs(null);render()},
+  dy(n){UI.rd=addDays(UI.rd||TODAY,n);render()},
+  wk(n){UI.rw=addDays(weekStart(UI.rw||TODAY),n);render()},
   saveCust(){
     const n=$('cdn').value.trim();if(!n)return flash('Name cannot be empty');
     updateDoc(doc(db,'customers',UI.cust),{name:n,phone:$('cdp').value.trim(),phone2:$('cdq').value.trim(),address:$('cda').value.trim()}).catch(()=>flash('Could not save'));
@@ -251,14 +259,94 @@ const H=window.H={
     updateDoc(doc(db,'proofs',id),{deleted:false,emp:p.prevEmp,restoredAt:Date.now()}).then(()=>flash('Document restored')).catch(()=>flash('Could not restore'));
   },
   perm(id,on){updateDoc(doc(db,'users',id),{canAdd:!on}).then(()=>flash(on?'Add-customer access removed':'Add-customer access given')).catch(()=>flash('Could not update'))},
-  csv(){
-    const rows=[['Date','Time','Customer','Amount','Mode','Collected by']].concat(D.payments.slice().sort((a,b)=>a.date<b.date?-1:1).map(p=>[p.date,p.time,cust(p.cid).name,p.amount,p.mode,nm(p.emp)]));
+  csv(f,t2){
+    const inR=p=>!f||(p.date>=f&&p.date<=t2);
+    const rows=[['Date','Time','Customer','Amount','Mode','Collected by']].concat(D.payments.filter(inR).sort((a,b)=>a.date<b.date?-1:1).map(p=>[p.date,p.time,cust(p.cid).name,p.amount,p.mode,nm(p.emp)]));
     const t=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='payments-'+TODAY+'.csv';a.click();
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv;charset=utf-8'}));a.download='payments-'+(f?(f===t2?f:f+'-to-'+t2):TODAY)+'.csv';a.click();
   }
 };
 
 /* ---------- views ---------- */
+const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+function weekStart(d){const w=new Date(d+'T12:00:00').getDay();return addDays(d,-((w+6)%7))}
+function waNum(p){let n=String(p||'').replace(/\D/g,'');if(n.length===10)n='91'+n;else if(n.length===11&&n[0]==='0')n='91'+n.slice(1);return n}
+function waLink(c,amount,date,time,mode,bal){
+  const t='*Vetri Murugan Finance*\nPayment receipt\n\nCustomer: '+c.name+'\nAmount received: '+inr(amount)+'\nDate: '+new Date(date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+', '+time+'\nMode: '+mode+'\nBalance: '+inr(bal)+'\n\n'+(bal<=0?'Your loan is fully paid. ':'')+'நன்றி / Thank you';
+  const n=waNum(c.phone);
+  return 'https://wa.me/'+(n.length>=12?n:'')+'?text='+encodeURIComponent(t);
+}
+function recLink(p,l){const bal=l.amount-sum(lp(l).filter(q=>(q.ts||0)<=(p.ts||0)));return waLink(cust(p.cid),p.amount,p.date,p.time,p.mode,bal)}
+function rcCard(){
+  const r=UI.rc,c=cust(r.cid);
+  return `<div class="card" style="border:2px solid var(--green)"><b>Payment saved</b><div class="mute">${esc(c.name)} \u00b7 ${inr(r.amount)} \u00b7 Balance ${inr(r.bal)}</div><a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1faa59;color:#fff;margin-top:12px" href="${waLink(c,r.amount,r.date,r.time,r.mode,r.bal)}" target="_blank" rel="noopener">Send receipt on WhatsApp</a>${waNum(c.phone).length>=12?'':'<div class="mute" style="margin-top:8px">No valid phone number saved, so you will pick the contact in WhatsApp.</div>'}<button class="btn alt" style="margin-top:10px" onclick="H.set('rc',null)">Done</button></div>`;
+}
+function tbl(h,rows,empty){return `<div class="card tbl"><table><tr>${h.map(x=>'<th>'+x+'</th>').join('')}</tr>${rows||'<tr><td colspan="'+h.length+'" class="mute">'+(empty||'No entries')+'</td></tr>'}</table></div>`}
+function splitTables(ps){
+  const ids=[ME.uid].concat(emps().map(u=>u.id));
+  const er=ids.map(id=>{const a=ps.filter(p=>p.emp===id);return a.length?`<tr><td>${esc(nm(id))}</td><td>${a.length}</td><td>${inr(sum(a))}</td></tr>`:''}).join('');
+  const mr=MODES.map(m=>{const a=ps.filter(p=>p.mode===m);return `<tr><td>${m}</td><td>${a.length}</td><td>${inr(sum(a))}</td></tr>`}).join('');
+  return '<h2>By collector</h2>'+tbl(['Name','Entries','Amount'],er)+'<h2>By mode</h2>'+tbl(['Mode','Entries','Amount'],mr);
+}
+const fmtK=v=>v>=100000?(v/100000).toFixed(v>=1000000?0:1)+'L':v>=1000?Math.round(v/1000)+'k':String(Math.round(v));
+function barSVG(vals,labs,every,label){
+  const W=340,H=160,pl=34,pb=20,pt=10,n=vals.length,mx=Math.max(1,...vals),bw=(W-pl-4)/n,ph=H-pb-pt;
+  let g='';[0,.5,1].forEach(f=>{const y=H-pb-ph*f;g+=`<line class="g" x1="${pl}" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/><text class="t" x="${pl-4}" y="${(y+3).toFixed(1)}" text-anchor="end">${fmtK(mx*f)}</text>`});
+  const bars=vals.map((v,i)=>{const h=ph*v/mx;return `<rect class="b" x="${(pl+i*bw+1).toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${Math.max(1,bw-2).toFixed(1)}" height="${h.toFixed(1)}" rx="2"/>`}).join('');
+  const xl=labs.map((l,i)=>i%every===0?`<text class="t" x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-5}" text-anchor="middle">${l}</text>`:'').join('');
+  return `<svg class="ch" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${label}">${g}${bars}${xl}</svg>`;
+}
+function donut(parts){
+  const tot=parts.reduce((s,p)=>s+p.v,0)||1,C=2*Math.PI*40;let off=0;
+  const seg=parts.filter(p=>p.v>0).map(p=>{const len=C*p.v/tot,el=`<circle class="${p.cls}" cx="60" cy="60" r="40" fill="none" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"/>`;off+=len;return el}).join('');
+  return `<svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Loan status split">${seg||'<circle cx="60" cy="60" r="40" fill="none" stroke="var(--line)" stroke-width="18"/>'}</svg>`;
+}
+function repIns(){
+  const dm={};D.payments.forEach(p=>{dm[p.date]=(dm[p.date]||0)+p.amount});
+  const wk=UI.ir==='w',vals=[],labs=[];let ttl;
+  if(!wk){for(let i=29;i>=0;i--){const d=addDays(TODAY,-i);vals.push(dm[d]||0);labs.push(+d.slice(8))}ttl='Collections, last 30 days'}
+  else{const w0=weekStart(TODAY);for(let k=11;k>=0;k--){const ws=addDays(w0,-7*k);let t=0;for(let i=0;i<7;i++)t+=dm[addDays(ws,i)]||0;vals.push(t);labs.push((+ws.slice(8))+'/'+(+ws.slice(5,7)))}ttl='Collections, last 12 weeks'}
+  let l30=0;for(let i=0;i<30;i++)l30+=dm[addDays(TODAY,-i)]||0;
+  const od=D.loans.filter(l=>status(l)==='Overdue'),open=D.loans.filter(l=>status(l)!=='Closed');
+  const act=D.loans.filter(l=>status(l)==='Active').length,clo=D.loans.filter(l=>status(l)==='Closed').length;
+  const tc=D.loans.reduce((s,l)=>s+l.amount,0),col=sum(D.payments),rate=tc?Math.round(col/tc*100):0;
+  const pend=open.reduce((s,l)=>s+l.amount-paid(l),0),odAmt=od.reduce((s,l)=>s+l.amount-paid(l),0);
+  const ps30=D.payments.filter(p=>p.date>=addDays(TODAY,-29)),ids=[ME.uid].concat(emps().map(u=>u.id));
+  const hb=rows=>{const mx=Math.max(1,...rows.map(r=>r[1]));return rows.map(r=>`<div class="hb"><span>${esc(r[0])}</span><div class="tr"><i style="width:${(r[1]/mx*100).toFixed(0)}%"></i></div><b>${inr(r[1])}</b></div>`).join('')||'<div class="mute">No data yet</div>'};
+  const colRows=ids.map(id=>[nm(id),sum(ps30.filter(p=>p.emp===id))]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+  const modeRows=MODES.map(m=>[m,sum(ps30.filter(p=>p.mode===m))]);
+  const tg=(k,t)=>`<button class="${(wk?'w':'d')===k?'on':''}" onclick="H.set('ir','${k}')">${t}</button>`;
+  return `<div class="stats"><div class="stat"><b>${inr(l30)}</b><span class="mute">Collected, last 30 days</span></div><div class="stat"><b>${inr(l30/30)}</b><span class="mute">Average per day</span></div><div class="stat"><b>${act+od.length}</b><span class="mute">Open loans</span></div><div class="stat red"><b>${inr(odAmt)}</b><span class="mute">Overdue amount (${od.length})</span></div></div>
+  <h2>${ttl}</h2><div class="seg">${tg('d','30 days')}${tg('w','12 weeks')}</div><div class="card">${barSVG(vals,labs,wk?2:5,ttl)}</div>
+  <h2>Collected so far</h2><div class="card"><div class="row"><b>${rate}% collected</b><span class="mute">${inr(col)} of ${inr(tc)}</span></div><div class="prog"><i style="width:${rate}%"></i></div><div class="mute" style="margin-top:8px">Pending on open loans: ${inr(pend)}</div></div>
+  <h2>Loan status</h2><div class="card row" style="justify-content:flex-start;gap:20px">${donut([{v:act,cls:'ds1'},{v:od.length,cls:'ds2'},{v:clo,cls:'ds3'}])}<div class="lg"><span><i class="dot" style="background:var(--green)"></i>Active: ${act}</span><span><i class="dot" style="background:var(--red)"></i>Overdue: ${od.length}</span><span><i class="dot" style="background:var(--mute)"></i>Closed: ${clo}</span></div></div>
+  <h2>By collector (last 30 days)</h2><div class="card">${hb(colRows)}</div>
+  <h2>By payment mode (last 30 days)</h2><div class="card">${hb(modeRows)}</div>`;
+}
+function repDay(){
+  const d=UI.rd||TODAY,ps=D.payments.filter(p=>p.date===d).sort((a,b)=>a.time<b.time?-1:1);
+  const nl=D.loans.filter(l=>l.disbursal===d),cl=D.loans.filter(l=>status(l)==='Closed'&&lastPay(l)===d);
+  const rows=ps.map(p=>`<tr><td>${p.time}</td><td>${esc(cust(p.cid).name)}</td><td>${p.mode}</td><td>${esc(nm(p.emp))}</td><td><b>${inr(p.amount)}</b></td></tr>`).join('');
+  return `<div class="row"><button class="back" onclick="H.dy(-1)">\u2039 Prev</button><input type="date" value="${d}" aria-label="Report date" style="width:auto;height:44px" onchange="H.set('rd',this.value||'${TODAY}')"><button class="back" onclick="H.dy(1)">Next \u203a</button></div>
+  <div class="hero" style="margin-top:12px"><span>Daily report: ${fmtD(d)}</span><b>${inr(sum(ps))}</b><span>${ps.length} ${ps.length===1?'entry':'entries'} collected</span></div>
+  <div class="stats"><div class="stat"><b>${nl.length}</b><span class="mute">New loans (${inr(nl.reduce((s,l)=>s+l.given,0))} given)</span></div><div class="stat"><b>${cl.length}</b><span class="mute">Loans closed</span></div></div>
+  ${splitTables(ps)}<h2>All entries</h2>${tbl(['Time','Customer','Mode','By','Amount'],rows,'No collections on this day')}
+  <button class="btn" onclick="H.csv('${d}','${d}')">Download this day (CSV)</button>`;
+}
+function repWeek(){
+  const ws=weekStart(UI.rw||TODAY),we=addDays(ws,6),ps=D.payments.filter(p=>p.date>=ws&&p.date<=we);
+  const nl=D.loans.filter(l=>l.disbursal>=ws&&l.disbursal<=we),cl=D.loans.filter(l=>{const d=lastPay(l);return status(l)==='Closed'&&d>=ws&&d<=we});
+  const days=[0,1,2,3,4,5,6].map(i=>{const d=addDays(ws,i),a=ps.filter(p=>p.date===d);return `<tr><td>${fmtD(d)}</td><td>${a.length}</td><td><b>${inr(sum(a))}</b></td></tr>`}).join('');
+  return `<div class="row"><button class="back" onclick="H.wk(-7)">\u2039 Prev</button><input type="date" value="${ws}" aria-label="Any date in the week" style="width:auto;height:44px" onchange="H.set('rw',this.value||'${TODAY}')"><button class="back" onclick="H.wk(7)">Next \u203a</button></div>
+  <div class="hero" style="margin-top:12px"><span>Weekly report: ${fmtD(ws)} to ${fmtD(we)}</span><b>${inr(sum(ps))}</b><span>${ps.length} ${ps.length===1?'entry':'entries'} collected</span></div>
+  <div class="stats"><div class="stat"><b>${nl.length}</b><span class="mute">New loans (${inr(nl.reduce((s,l)=>s+l.given,0))} given)</span></div><div class="stat"><b>${cl.length}</b><span class="mute">Loans closed</span></div></div>
+  <h2>Day by day</h2>${tbl(['Day','Entries','Amount'],days)}${splitTables(ps)}
+  <button class="btn" onclick="H.csv('${ws}','${we}')">Download this week (CSV)</button>`;
+}
+function reports(){
+  const b=(k,t)=>`<button class="${UI.rep===k?'on':''}" onclick="H.set('rep','${k}')">${t}</button>`;
+  return `<h2 style="margin-top:0">Reports</h2><div class="seg">${b('sum','Summary')}${b('day','Daily')}${b('week','Weekly')}${b('ins','Insights')}</div>`+(UI.rep==='day'?repDay():UI.rep==='week'?repWeek():UI.rep==='ins'?repIns():repSummary());
+}
 async function commitAll(ops){for(let i=0;i<ops.length;i+=400){const b=writeBatch(db);ops.slice(i,i+400).forEach(o=>b.update(o[0],o[1]));await b.commit()}}
 function deletedTab(){
   const dt=x=>new Date(x.deletedAt).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -319,7 +407,7 @@ function dash(){
   const list=day.map(p=>`<div class="card row"><div><b>${esc(cust(p.cid).name)}</b><div class="mute">${p.time} \u00b7 ${p.mode} \u00b7 ${esc(nm(p.emp))}${p._p?' <span class="pill sync">Pending sync</span>':''}</div></div><b>${inr(p.amount)}</b></div>`).join('');
   const mn=new Date(y,m-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'});
   return `<div class="hero"><span>Collected today</span><b>${inr(sum(tp))}</b><span>${tp.length} ${tp.length===1?'entry':'entries'}</span></div>
-  <div class="stats"><div class="stat red"><b>${od.length}</b><span class="mute">Overdue loans</span></div><div class="stat"><b>${soon.length}</b><span class="mute">Due in 7 days</span></div></div>
+  <div class="stats"><div class="stat red"><b>${od.length}</b><span class="mute">Overdue loans</span></div><div class="stat"><b>${soon.length}</b><span class="mute">Due in 7 days</span></div></div>${own()?'<button class="btn alt" style="margin-top:12px" onclick="H.ins()">View overall insights (graphs)</button>':''}
   <h2 class="row"><button class="back" onclick="H.month(-1)">\u2039 Prev</button><span>${mn}</span><button class="back" onclick="H.month(1)">Next \u203a</button></h2>
   <div class="cal">${cells}</div>
   <h2>${new Date(UI.sel+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}: ${day.length} ${day.length===1?'entry':'entries'}, ${inr(sum(day))}</h2>
@@ -350,8 +438,8 @@ function custTab(){
     if(!l)return o+'<div class="card mute">No active loan. See the Loans tab for history.</div>';
     const pd=paid(l),dl=diff(due(l),TODAY);
     o+=`<div class="card"><div class="row"><b>Current loan</b><span class="pill ${status(l)}">${status(l)}</span></div><div class="stats" style="margin-top:10px"><div><span class="mute">Loan amount</span><br><b>${inr(l.amount)}</b></div><div><span class="mute">Given in hand</span><br><b>${inr(l.given)}</b></div><div><span class="mute">Repaid</span><br><b>${inr(pd)}</b></div><div><span class="mute">Balance</span><br><b>${inr(l.amount-pd)}</b></div></div><div class="prog"><i style="width:${Math.min(100,pd/l.amount*100)}%"></i></div><div class="mute" style="margin-top:8px">Disbursed ${l.disbursal} \u00b7 Due ${due(l)} (${dl>=0?dl+' days left':-dl+' days overdue'})</div></div>`;
-    const rows=lp(l).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.time<b.time?1:-1)).map(p=>`<tr><td>${p.date}</td><td>${p.time}</td><td>${p.mode}</td><td>${esc(nm(p.emp))}</td><td><b>${inr(p.amount)}</b>${p._p?' <span class="pill sync">Pending</span>':''}</td>${own()?`<td><button class="btn sm" style="color:var(--red)" onclick="H.delPay('${p.id}')">Delete</button></td>`:''}</tr>`).join('');
-    return o+`<h2>Payment history</h2><div class="card tbl"><table><tr><th>Date</th><th>Time</th><th>Mode</th><th>By</th><th>Amount</th>${own()?'<th></th>':''}</tr>${rows}</table></div>`;
+    const rows=lp(l).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.time<b.time?1:-1)).map(p=>`<tr><td>${p.date}</td><td>${p.time}</td><td>${p.mode}</td><td>${esc(nm(p.emp))}</td><td><b>${inr(p.amount)}</b>${p._p?' <span class="pill sync">Pending</span>':''}</td><td><a href="${recLink(p,l)}" target="_blank" rel="noopener">Receipt</a></td>${own()?`<td><button class="btn sm" style="color:var(--red)" onclick="H.delPay('${p.id}')">Delete</button></td>`:''}</tr>`).join('');
+    return o+`<h2>Payment history</h2><div class="card tbl"><table><tr><th>Date</th><th>Time</th><th>Mode</th><th>By</th><th>Amount</th><th></th>${own()?'<th></th>':''}</tr>${rows}</table></div>`;
   }
   const items=D.customers.slice().sort((a,b)=>a.name<b.name?-1:1).map(c=>{
     const l=openLoan(c.id);
@@ -374,7 +462,7 @@ function addTab(){
   const open=D.loans.filter(l=>status(l)!=='Closed').sort((a,b)=>cust(a.cid).name<cust(b.cid).name?-1:1);
   const opts='<option value="">Select customer</option>'+open.map(l=>`<option value="${l.id}"${UI.pick===l.id?' selected':''}>${esc(cust(l.cid).name)}</option>`).join('');
   const l=open.find(x=>x.id===UI.pick);
-  return `<h2 style="margin-top:0">Add payment</h2><label for="cs" style="margin-top:0">Customer</label><select id="cs" onchange="H.set('pick',this.value)">${opts}</select>
+  return `<h2 style="margin-top:0">Add payment</h2>${UI.rc?rcCard():''}<label for="cs" style="margin-top:0">Customer</label><select id="cs" onchange="H.set('pick',this.value)">${opts}</select>
   ${l?`<div class="bar" style="border-color:var(--line)"><div class="row"><span>Balance</span><b>${inr(l.amount-paid(l))}</b></div></div>`:''}
   <label for="amt">Amount collected (\u20b9)</label><input id="amt" class="big" type="number" inputmode="numeric" min="1" placeholder="0">
   <div class="chips">${[100,200,300,500,1000].map(n=>`<button onclick="H.amt(${n})">${n}</button>`).join('')}</div>
@@ -383,14 +471,14 @@ function addTab(){
   <button class="btn" onclick="H.pay()">Save payment</button>`;
 }
 
-function reports(){
+function repSummary(){
   const ls=D.loans,lent=ls.reduce((s,l)=>s+l.given,0),tc=ls.reduce((s,l)=>s+l.amount,0);
   const pend=ls.filter(l=>status(l)!=='Closed').reduce((s,l)=>s+l.amount-paid(l),0);
   const ids=[ME.uid].concat(emps().map(u=>u.id));
   const er=ids.map(id=>{const a=D.payments.filter(p=>p.emp===id),t=a.filter(p=>p.date===TODAY);return `<tr><td>${esc(nm(id))}</td><td>${t.length}</td><td>${inr(sum(t))}</td><td>${inr(sum(a))}</td></tr>`}).join('');
   const mr=MODES.map(m=>`<tr><td>${m}</td><td>${inr(sum(D.payments.filter(p=>p.mode===m)))}</td></tr>`).join('');
   const or=ls.filter(l=>status(l)==='Overdue').map(l=>`<tr><td>${esc(cust(l.cid).name)}</td><td>${inr(l.amount-paid(l))}</td><td>${diff(TODAY,due(l))} days</td></tr>`).join('');
-  return `<h2 style="margin-top:0">Reports</h2><div class="stats"><div class="stat"><b>${inr(lent)}</b><span class="mute">Cash lent out</span></div><div class="stat"><b>${inr(tc)}</b><span class="mute">Total to collect</span></div><div class="stat"><b>${inr(tc-lent)}</b><span class="mute">Interest earned</span></div><div class="stat"><b>${inr(sum(D.payments))}</b><span class="mute">Collected so far</span></div><div class="stat red"><b>${inr(pend)}</b><span class="mute">Pending on open loans</span></div></div>
+  return `<div class="stats"><div class="stat"><b>${inr(lent)}</b><span class="mute">Cash lent out</span></div><div class="stat"><b>${inr(tc)}</b><span class="mute">Total to collect</span></div><div class="stat"><b>${inr(tc-lent)}</b><span class="mute">Interest earned</span></div><div class="stat"><b>${inr(sum(D.payments))}</b><span class="mute">Collected so far</span></div><div class="stat red"><b>${inr(pend)}</b><span class="mute">Pending on open loans</span></div></div>
   <h2>By collector</h2><div class="card tbl"><table><tr><th>Name</th><th>Today</th><th>Today \u20b9</th><th>All time</th></tr>${er}</table></div>
   <h2>By mode</h2><div class="card tbl"><table><tr><th>Mode</th><th>Collected</th></tr>${mr}</table></div>
   <h2>Overdue</h2><div class="card tbl"><table><tr><th>Customer</th><th>Balance</th><th>Overdue by</th></tr>${or||'<tr><td colspan="3" class="mute">None</td></tr>'}</table></div>
