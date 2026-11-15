@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Payment receipt</title>
+<style>
+:root{--bg:#f3f6f9;--card:#fff;--ink:#14262e;--mute:#5d707a;--line:#e4eaf0;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1226;--card:#151d38;--ink:#e8f0f2;--mute:#8fa5ad;--line:#27325a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;padding:env(safe-area-inset-top,0px) 14px calc(24px + env(safe-area-inset-bottom,0px))}
+.w{max-width:480px;margin:0 auto;padding-top:20px}
+.c{background:var(--card);border-radius:18px;box-shadow:0 1px 2px rgba(20,38,46,.06),0 6px 18px rgba(20,38,46,.06);padding:18px}
+.l{color:var(--mute);font-size:13px}.id{font-size:28px;font-weight:800;margin:2px 0 12px}
+.e{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.e b.a{font-size:19px}.e span{color:var(--mute);font-size:13px}
+.n{text-align:center;color:var(--mute);padding:18px 0}
+</style></head><body>
+<div class="w"><div class="c" id="o"><div class="n">Loading…</div></div></div>
+<script type="module">
+/*FB*/
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+const CFG={apiKey:"AIzaSyBNIR2oFEJrcvqcGCBibX6vWCKqIrjMxX0",authDomain:"collection-app-f5e97.firebaseapp.com",projectId:"collection-app-f5e97",storageBucket:"collection-app-f5e97.firebasestorage.app",messagingSenderId:"820066396874",appId:"1:820066396874:web:c09be2d040eaaa4455a233"};
+let K=new URLSearchParams(location.search).get('k');
+try{if(K){sessionStorage.setItem('rk',K);history.replaceState(null,'',location.pathname)}else K=sessionStorage.getItem('rk')}catch(e){}
+const getShare=async k=>{const s=await getDoc(doc(getFirestore(initializeApp(CFG)),'shares',k));return s.exists()?s.data():null};
+/*FBEND*/
+const o=document.getElementById('o');
+const inr=n=>'\u20b9'+Math.round(n).toLocaleString('en-IN');
+const fd=d=>new Date(d+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+(async()=>{
+  if(!K){o.innerHTML='<div class="n">This link is not valid.</div>';return}
+  try{
+    const d=await getShare(K);
+    if(!d){o.innerHTML='<div class="n">This link is not valid.</div>';return}
+    const en=d.entries||[];
+    o.innerHTML='<div class="l">Loan ID</div><div class="id">L-'+String(d.loanNo).padStart(4,'0')+'</div>'+
+      (en.length?en.map((e,i)=>`<div class="e"><div><b>${fd(e.d)}</b><br><span>Entry ${i+1} \u00b7 ${esc(e.t)} \u00b7 ${esc(e.m)}</span></div><b class="a">${inr(e.a)}</b></div>`).join(''):'<div class="n">No payments yet.</div>');
+  }catch(e){o.innerHTML='<div class="n">Could not load. Check your internet connection and try again.</div>'}
+})();
+</script></body></html>
